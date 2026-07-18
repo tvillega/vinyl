@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '2.2.0'
+    ext.kotlin_version = '2.2.20'
     repositories {
         mavenCentral()
         google()
@@ -8,8 +8,8 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.13.2'
-        classpath 'com.cmgapps:gradle-licenses-plugin:4.7.0' // For dependencies license report
+        classpath 'com.android.tools.build:gradle:9.2.1'
+        classpath 'com.cmgapps:gradle-licenses-plugin:4.8.0' // For dependencies license report
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }

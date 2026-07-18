@@ -166,15 +166,15 @@ class PackageValidator(context: Context, @XmlRes xmlResId: Int) {
     private fun buildCallerInfo(callingPackage: String): CallerPackageInfo? {
         val packageInfo = getPackageInfo(callingPackage) ?: return null
 
-        val appName = packageInfo.applicationInfo.loadLabel(packageManager).toString()
-        val uid = packageInfo.applicationInfo.uid
+        val appName = packageInfo.applicationInfo?.loadLabel(packageManager).toString()
+        val uid = packageInfo.applicationInfo?.uid
         val signature = getSignature(packageInfo)
 
         val requestedPermissions = packageInfo.requestedPermissions
         val permissionFlags = packageInfo.requestedPermissionsFlags
         val activePermissions = mutableSetOf<String>()
         requestedPermissions?.forEachIndexed { index, permission ->
-            if (permissionFlags[index] and REQUESTED_PERMISSION_GRANTED != 0) {
+            if (permissionFlags?.get(index)?.and(REQUESTED_PERMISSION_GRANTED) != 0) {
                 activePermissions += permission
             }
         }
@@ -208,10 +208,10 @@ class PackageValidator(context: Context, @XmlRes xmlResId: Int) {
         // Security best practices dictate that an app should be signed with exactly one (1)
         // signature. Because of this, if there are multiple signatures, reject it.
         @Suppress("DEPRECATION")
-        if (packageInfo.signatures == null || packageInfo.signatures.size != 1) {
+        if (packageInfo.signatures == null || packageInfo.signatures!!.size != 1) {
             return null
         } else {
-            val certificate = packageInfo.signatures[0].toByteArray()
+            val certificate = packageInfo.signatures!![0].toByteArray()
             return getSignatureSha256(certificate)
         }
     }
@@ -336,11 +336,11 @@ class PackageValidator(context: Context, @XmlRes xmlResId: Int) {
      * to see if it's a known caller.
      */
     private data class CallerPackageInfo(
-            val name: String,
-            val packageName: String,
-            val uid: Int,
-            val signature: String?,
-            val permissions: Set<String>
+        val name: String,
+        val packageName: String,
+        val uid: Int?,
+        val signature: String?,
+        val permissions: Set<String>
     )
 }
 
