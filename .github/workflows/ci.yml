@@ -16,40 +16,62 @@ jobs:
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: wrapper
 
     - name: Merge feature branches
-      if: github.ref == 'refs/heads/cont-integ'
+      if: (github.ref == 'refs/heads/cont-integ')
       run: ./script/merge-feature-branches
 
-    - name: Build Pages (Credits & Licenses)
-      if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')
-      run: |
-        ./script/build-credits-page
-        ./script/build-licenses-page
+    - name: Build the credits page
+      if: (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
+      run: ./script/build-credits-page
 
-    - name: Build, Test & Lint CI
-      if: "!startsWith(github.ref, 'refs/tags/')"
-      run: ./gradlew testDebugUnitTest lint assembleCiRelease
+    - name: Build the licenses page
+      if: (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
+      run: ./script/build-licenses-page
+
+    - name: Build CI application
+      if: (!contains(github.ref, 'refs/tags/'))
+      run: ./script/build-release
       env:
-        KEYSTORE_PROPERTIES: ${{ secrets.KEYSTORE_PROPERTIES }}
-        STORE_FILE: ${{ secrets.STORE_FILE }}
+        KEYSTORE_PROPERTIES: ${{secrets.KEYSTORE_PROPERTIES}}
+        STORE_FILE: ${{secrets.STORE_FILE}}
+        GRADLEW_COMMAND: assembleCiRelease
 
-    - name: Build Play Store Application
-      if: startsWith(github.ref, 'refs/tags/')
-      run: ./gradlew assemblePlayStoreRelease
+    - name: Build Play Store application
+      if: (contains(github.ref, 'refs/tags/'))
+      run: ./script/build-release
       env:
-        KEYSTORE_PROPERTIES: ${{ secrets.KEYSTORE_PROPERTIES }}
-        STORE_FILE: ${{ secrets.STORE_FILE }}
+        KEYSTORE_PROPERTIES: ${{secrets.KEYSTORE_PROPERTIES}}
+        STORE_FILE: ${{secrets.STORE_FILE}}
+        GRADLEW_COMMAND: assemblePlayStoreRelease
 
-    - name: Archive Build Outputs
-      if: always()
+    - name: Archive APKs
       uses: actions/upload-artifact@v4
       with:
-        name: build-outputs
-        path: |
-          app/build/outputs/apk/**/*.apk
-          app/build/test-results/**/*.xml
-          app/build/reports/lint-*
+        name: outputs-apk
+        path: app/build/outputs/apk/**/*.apk
+
+    - name: Run tests
+      run: ./gradlew testCiRelease
+      if: (!contains(github.ref, 'refs/tags/'))
+    - name: Archive test results
+      if: (!contains(github.ref, 'refs/tags/'))
+      uses: actions/upload-artifact@v4
+      with:
+        name: outputs-tests
+        path: app/build/test-results
+
+    - name: Static analysis
+      run: ./gradlew lint
+      if: (!contains(github.ref, 'refs/tags/'))
+    - name: Archive lint results
+      if: (!contains(github.ref, 'refs/tags/'))
+      uses: actions/upload-artifact@v4
+      with:
+        name: outputs-lint
+        path: app/build/reports/lint-*
 
   publish:
     if: (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
