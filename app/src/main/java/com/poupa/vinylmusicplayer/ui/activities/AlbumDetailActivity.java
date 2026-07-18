@@ -15,7 +15,8 @@ import androidx.loader.content.Loader;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.afollestad.materialdialogs.util.DialogUtils;
+import com.afollestad.materialcab.attached.AttachedCab;
+import com.afollestad.materialcab.attached.AttachedCabKt;
 import com.kabouzeid.appthemehelper.util.ColorUtil;
 import com.kabouzeid.appthemehelper.util.MaterialValueHelper;
 import com.poupa.vinylmusicplayer.R;
@@ -75,7 +76,6 @@ public class AlbumDetailActivity
 
     @Nullable
     String wiki;
-    MarkdownViewDialog wikiDialog;
     private LastFMRestClient lastFMRestClient;
 
     @Override
@@ -131,7 +131,7 @@ public class AlbumDetailActivity
                 NavigationUtil.goToArtist(this, album.getArtistNames());
             }
         });
-        setColors(DialogUtils.resolveColor(this, R.attr.defaultFooterColor));
+        setColors(R.attr.defaultFooterColor);
     }
 
     private void loadAlbumCover() {
@@ -252,18 +252,19 @@ public class AlbumDetailActivity
                             return;
                         }
 
-                        if (!PreferenceUtil.isAllowedToDownloadMetadata(AlbumDetailActivity.this)) {
-                            if (wiki != null) {
-                                wikiDialog.setMarkdownContent(AlbumDetailActivity.this, wiki);
-                            } else {
-                                wikiDialog.dismiss();
-                                SafeToast.show(AlbumDetailActivity.this, getResources().getString(R.string.wiki_unavailable));
-                            }
+                        if (wiki != null) {
+                            new MarkdownViewDialog.Builder(AlbumDetailActivity.this)
+                                    .setMarkdownContent(wiki)
+                                    .setTitle(album.getTitle())
+                                    .show();
+                        } else {
+                            SafeToast.show(AlbumDetailActivity.this, R.string.wiki_unavailable);
                         }
                     }
 
                     @Override
                     public void onFailure(@NonNull Call<LastFmAlbum> call, @NonNull Throwable t) {
+                        SafeToast.show(AlbumDetailActivity.this, R.string.wiki_unavailable);
                         t.printStackTrace();
                     }
                 });
@@ -306,21 +307,10 @@ public class AlbumDetailActivity
             NavigationUtil.goToArtist(this, getAlbum().getArtistNames());
             return true;
         } else if (id == R.id.action_wiki) {
-            if (wikiDialog == null) {
-                wikiDialog = new MarkdownViewDialog.Builder(this)
-                        .title(album.getTitle())
-                        .build();
-            }
-            if (PreferenceUtil.isAllowedToDownloadMetadata(this)) {
-                if (wiki != null) {
-                    wikiDialog.setMarkdownContent(this, wiki);
-                    wikiDialog.show();
-                } else {
-                    SafeToast.show(this, getResources().getString(R.string.wiki_unavailable));
-                }
-            } else {
-                wikiDialog.show();
+            if (PreferenceUtil.isAllowedToDownloadMetadata(AlbumDetailActivity.this)) {
                 loadWiki();
+            } else {
+                SafeToast.show(AlbumDetailActivity.this, R.string.wiki_disallowed);
             }
             return true;
         }
@@ -367,10 +357,6 @@ public class AlbumDetailActivity
     private void setAlbum(final Album album) {
         this.album = album;
         loadAlbumCover();
-
-        if (PreferenceUtil.isAllowedToDownloadMetadata(this)) {
-            loadWiki();
-        }
 
         final List<String> artistNames = album.getArtistNames();
         final String artistName = artistNames.isEmpty()
