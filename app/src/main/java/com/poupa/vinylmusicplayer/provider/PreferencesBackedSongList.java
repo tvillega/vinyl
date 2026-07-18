@@ -7,9 +7,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.poupa.vinylmusicplayer.App;
+import com.poupa.vinylmusicplayer.R;
 import com.poupa.vinylmusicplayer.discog.Discography;
 import com.poupa.vinylmusicplayer.misc.queue.IndexedSong;
 import com.poupa.vinylmusicplayer.model.Song;
+import com.poupa.vinylmusicplayer.util.PrefKey;
 import com.poupa.vinylmusicplayer.util.StringUtil;
 
 import java.util.ArrayList;
@@ -119,9 +121,9 @@ abstract class MutableSongList extends SongList {
     }
 }
 
-class PreferencesBackedSongList extends MutableSongList {
+public class PreferencesBackedSongList extends MutableSongList {
     private static final String SEPARATOR = ",";
-    private static final String PREF_NAME_PREFIX = "SONG_IDS_";
+    private static final String PREF_NAME_PREFIX = PrefKey.nonExportablePrefixedKey("SONG_IDS_");
 
     private static SharedPreferences preferences = null;
     static SharedPreferences getPreferences() {
@@ -134,15 +136,25 @@ class PreferencesBackedSongList extends MutableSongList {
     static List<PreferencesBackedSongList> loadAll() {
         ArrayList<PreferencesBackedSongList> result = new ArrayList<>();
 
+        String favoritesPlaylistName = App.getStaticContext().getString(R.string.favorites);
+        PreferencesBackedSongList favoritesPlaylist = null;
+
         final SharedPreferences preferences = getPreferences();
         for (String prefName : preferences.getAll().keySet()) {
             if (prefName.startsWith(PREF_NAME_PREFIX)) {
                 final String name = prefName.substring(PREF_NAME_PREFIX.length());
+                if (name.equals(favoritesPlaylistName)){
+                    favoritesPlaylist = new PreferencesBackedSongList(name);
+                    continue;
+                }
                 result.add(new PreferencesBackedSongList(name));
             }
         }
 
         Collections.sort(result, (l1, l2) -> StringUtil.compareIgnoreAccent(l1.name, l2.name));
+
+        if (favoritesPlaylist != null)
+            result.add(0, favoritesPlaylist);
 
         return result;
     }
@@ -186,7 +198,7 @@ class PreferencesBackedSongList extends MutableSongList {
 }
 
 class PreferenceBackedReorderableSongList extends PreferencesBackedSongList {
-    public PreferenceBackedReorderableSongList(@NonNull final String name) {
+    PreferenceBackedReorderableSongList(@NonNull final String name) {
         super(name);
     }
 

@@ -139,7 +139,7 @@ public class SleepTimerDialog extends DialogFragment {
                 changingText.set(true);
                 String val = s.toString();
                 if (val.isEmpty()) {
-                    val = "1";
+                    val = "0";
                 }
                 seekArc.setProgress(Integer.parseInt(val));
                 seekArcProgress = Integer.parseInt(val);
@@ -152,7 +152,7 @@ public class SleepTimerDialog extends DialogFragment {
             @Override
             public void onProgressChanged(@NonNull SeekArc seekArc, int i, boolean b) {
                 if (i < 1) {
-                    seekArc.setProgress(1);
+                    seekArc.setProgress(0);
                     return;
                 }
                 seekArcProgress = i;

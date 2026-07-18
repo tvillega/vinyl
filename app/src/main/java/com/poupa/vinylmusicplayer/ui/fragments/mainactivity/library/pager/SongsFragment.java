@@ -53,14 +53,14 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
                     dataSet,
                     itemLayoutRes,
                     usePalette,
-                    getLibraryFragment());
+                    getLibraryFragment().getMainActivity());
         }
         return new SongAdapter(
                 getLibraryFragment().getMainActivity(),
                 dataSet,
                 itemLayoutRes,
                 usePalette,
-                getLibraryFragment());
+                getLibraryFragment().getMainActivity());
     }
 
     @Override
@@ -112,6 +112,21 @@ public class SongsFragment extends AbsLibraryPagerRecyclerViewCustomGridSizeFrag
     @Override
     protected void saveGridSizeLand(int gridSize) {
         PreferenceUtil.getInstance().setSongGridSizeLand(gridSize);
+    }
+
+    @Override
+    public void saveShowFooter(boolean showFooter) {
+        // TODO
+    }
+
+    @Override
+    public boolean loadShowFooter() {
+        return true; // TODO
+    }
+
+    @Override
+    public void setShowFooter(boolean showFooter) {
+        // TODO
     }
 
     @Override

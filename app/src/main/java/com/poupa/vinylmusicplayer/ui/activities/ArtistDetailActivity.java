@@ -9,7 +9,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.loader.app.LoaderManager;
@@ -33,8 +32,6 @@ import com.poupa.vinylmusicplayer.glide.GlideApp;
 import com.poupa.vinylmusicplayer.glide.VinylColoredTarget;
 import com.poupa.vinylmusicplayer.glide.VinylGlideExtension;
 import com.poupa.vinylmusicplayer.helper.MusicPlayerRemote;
-import com.poupa.vinylmusicplayer.interfaces.CabCallbacks;
-import com.poupa.vinylmusicplayer.interfaces.CabHolder;
 import com.poupa.vinylmusicplayer.interfaces.LoaderIds;
 import com.poupa.vinylmusicplayer.interfaces.PaletteColorHolder;
 import com.poupa.vinylmusicplayer.lastfm.rest.LastFMRestClient;
@@ -61,7 +58,7 @@ import retrofit2.Response;
 
 public class ArtistDetailActivity
         extends AbsSlidingMusicPanelActivity
-        implements PaletteColorHolder, CabHolder, LoaderManager.LoaderCallbacks<Artist> {
+        implements PaletteColorHolder, LoaderManager.LoaderCallbacks<Artist> {
 
     private static final int LOADER_ID = LoaderIds.ARTIST_DETAIL_ACTIVITY;
     private static final int REQUEST_CODE_SELECT_IMAGE = 1000;
@@ -73,7 +70,6 @@ public class ArtistDetailActivity
     private View songListHeader;
     private RecyclerView albumRecyclerView;
 
-    private AttachedCab cab;
     int headerViewHeight;
     int toolbarColor;
 
@@ -276,6 +272,7 @@ public class ArtistDetailActivity
 
         layoutBinding.toolbar.setBackgroundColor(color);
         setSupportActionBar(layoutBinding.toolbar); // needed to auto readjust the toolbar content color
+        statusBarCollapsedColor = color; // needed to match the palette when the playing screen is collapsed
         setStatusbarColor(color);
 
         final int secondaryTextColor = MaterialValueHelper.getSecondaryTextColor(this, ColorUtil.isColorLight(color));
@@ -352,24 +349,10 @@ public class ArtistDetailActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @NonNull
-    @Override
-    public AttachedCab openCab(int menuRes, @NonNull final CabCallbacks callbacks) {
-        AttachedCabKt.destroy(cab);
-
-        @ColorInt final int color = getPaletteColor();
-        songAdapter.setColor(color);
-        cab = CabHolder.openCabImpl(this, menuRes, color, callbacks);
-        return cab;
-    }
-
     @Override
     public void onBackPressed() {
-        if (cab != null && AttachedCabKt.isActive(cab)) {AttachedCabKt.destroy(cab);}
-        else {
-            albumRecyclerView.stopScroll();
-            super.onBackPressed();
-        }
+        albumRecyclerView.stopScroll();
+        super.onBackPressed();
     }
 
     @Override
