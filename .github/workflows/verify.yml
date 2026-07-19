@@ -1,0 +1,44 @@
+name: Verify
+
+on:
+  push:
+    branches:
+      - '**' # Runs on all branches
+    tags-ignore:
+      - '**' # Excludes tags from triggering this workflow
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    # Only runs if the push happened specifically on the cont-integ branch
+    - name: Merge feature branches
+      if: github.ref == 'refs/heads/cont-integ'
+      run: ./script/merge-feature-branches
+
+    - name: Build, Test & Lint CI
+      run: ./gradlew testCiDebugUnitTest lint assembleCiRelease
+      env:
+        KEYSTORE_PROPERTIES: ${{ secrets.KEYSTORE_PROPERTIES }}
+        STORE_FILE: ${{ secrets.STORE_FILE }}
+
+    - name: Archive Test and Lint Outputs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: verify-outputs
+        path: |
+          app/build/outputs/apk/**/*.apk
+          app/build/test-results/**/*.xml
+          app/build/reports/lint-*
