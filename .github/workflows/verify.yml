@@ -27,11 +27,14 @@ jobs:
       if: github.ref == 'refs/heads/cont-integ'
       run: ./script/merge-feature-branches
 
-    - name: Build, Test & Lint CI
-      run: ./gradlew testCiDebugUnitTest lint assembleCiRelease
-      env:
-        KEYSTORE_PROPERTIES: ${{ secrets.KEYSTORE_PROPERTIES }}
-        STORE_FILE: ${{ secrets.STORE_FILE }}
+    - name: Run Unit Tests
+      run: ./gradlew testCiDebugUnitTest --build-cache
+
+    - name: Run Android Lint
+      run: ./gradlew lint --build-cache
+
+    - name: Assemble CI Release APK
+      run: ./gradlew assembleCiRelease --build-cache
 
     - name: Archive Test and Lint Outputs
       if: always()
